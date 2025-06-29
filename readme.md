@@ -50,7 +50,8 @@ print(response.text)
 ```
 (Possibly coherent haiku, possibly complete gibberish, possibly an apology from the AI for not understanding haikus.)
 ```
-
+## Known behavior 
+There is no message history, no context. If you want to send context, add it to prompt.
 ## Why?
 
 Because life's too short to use the same LLM every day. Embrace the randomness! Live a little! Confuse your users!
