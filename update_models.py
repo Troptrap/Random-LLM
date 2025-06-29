@@ -31,8 +31,17 @@ GROQ_HEADERS = {
 RPD_THRESHOLD = 8000
 CONTEXT_WINDOW_THRESHOLD = 8000
 
-# --- File freshness check ---
 def is_cache_fresh(file_path, max_age_hours=24):
+    """
+    Check if the cache file at file_path is fresh (not older than max_age_hours).
+    
+    Args:
+        file_path (str): Path to the cache file.
+        max_age_hours (int): Maximum age in hours for the cache to be considered fresh.
+        
+    Returns:
+        bool: True if fresh, False otherwise.
+    """
     if not os.path.exists(file_path):
         return False
     try:
@@ -47,9 +56,13 @@ def is_cache_fresh(file_path, max_age_hours=24):
         print(f"[Cache] Error reading cache: {e}")
         return False
 
-# --- Pollinations ---
-
 def get_pollinations_models():
+    """
+    Fetch and validate available Pollinations models for text-to-text chat.
+    
+    Returns:
+        dict: Dictionary mapping valid model names to the string "pollinations".
+    """
     headers = {}
     if POLLINATIONS_API_KEY:
         headers["Authorization"] = f"Bearer {POLLINATIONS_API_KEY}"
@@ -87,8 +100,13 @@ def get_pollinations_models():
         print(f"[Pollinations] Error fetching models: {e}")
         return {}
 
-# --- Groq ---
 def get_groq_models():
+    """
+    Fetch and filter Groq models based on context window and rate limits.
+    
+    Returns:
+        dict: Dictionary mapping valid model IDs to the string "groq".
+    """
     try:
         response = requests.get(GROQ_MODELS_URL, headers=GROQ_HEADERS)
         response.raise_for_status()
@@ -117,14 +135,28 @@ def get_groq_models():
         time.sleep(2)
     return valid_models
 
-# --- Gemini ---
 def parse_limit_value(val):
+    """
+    Parse a rate limit value from the Gemini documentation table.
+    
+    Args:
+        val (str): The value string to parse.
+        
+    Returns:
+        int: Parsed integer value, or 0 if not available.
+    """
     if val == "--" or not val:
         return 0
     match = re.search(r"[\d,]+", val.replace("\n", " "))
     return int(match.group(0).replace(",", "")) if match else None
 
 def fetch_free_tier_limits():
+    """
+    Scrape Gemini API free tier limits from the official documentation.
+    
+    Returns:
+        dict: Mapping of model documentation names to their rate limits.
+    """
     url = "https://ai.google.dev/gemini-api/docs/rate-limits"
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
@@ -144,9 +176,26 @@ def fetch_free_tier_limits():
     return limits
 
 def fetch_model_ids():
+    """
+    Fetch the list of available Gemini API model IDs.
+    
+    Returns:
+        list: List of Gemini API model IDs.
+    """
     return [m.name for m in GENAI_CLIENT.models.list()]
 
 def map_with_llm(scraped_names, model_ids, llm_model="gemini-2.0-flash"):
+    """
+    Use an LLM to map documentation model names to Gemini API model IDs.
+    
+    Args:
+        scraped_names (list): List of names from documentation.
+        model_ids (list): List of available API model IDs.
+        llm_model (str): The LLM model ID to use for mapping.
+        
+    Returns:
+        dict: Mapping from documentation names to API model IDs.
+    """
     system = "You are an assistant mapping documentation model names to API model IDs. Output only JSON: key = doc name, value = API model ID."
     user = (
         "Scraped names:\n" + json.dumps(scraped_names, indent=2) +
@@ -161,6 +210,15 @@ def map_with_llm(scraped_names, model_ids, llm_model="gemini-2.0-flash"):
     return json.loads(lm.text)[0]
 
 def get_gemini_models(rpd_threshold=200):
+    """
+    Collect eligible Gemini models above a specified rate limit threshold.
+    
+    Args:
+        rpd_threshold (int): Minimum requests per day allowed for inclusion.
+        
+    Returns:
+        dict: Dictionary mapping eligible model IDs to the string "gemini".
+    """
     if not GENAI_CLIENT:
         print("[Gemini] GEMINI_API_KEY not set.")
         return {}
@@ -183,8 +241,13 @@ def get_gemini_models(rpd_threshold=200):
         print(f"[Gemini] Error: {e}")
         return {}
 
-# --- Collect all ---
 def collect_all_models():
+    """
+    Collect all models from Pollinations, Groq, and Gemini, and combine them.
+    
+    Returns:
+        dict: Dictionary with a timestamp and model source mappings.
+    """
     pollinations = get_pollinations_models()
     groq = get_groq_models()
     gemini = get_gemini_models()
@@ -199,8 +262,10 @@ def collect_all_models():
         "models": all_models
     }
 
-# --- Main entry ---
 if __name__ == "__main__":
+    """
+    Main entry point: Checks cache freshness and updates model data if needed.
+    """
     if is_cache_fresh(OUTPUT_FILE):
         print("Everything up to date.")
         exit(0)
@@ -211,3 +276,4 @@ if __name__ == "__main__":
         json.dump(result, f, indent=2)
 
     print(f"\n✅ Model data updated and written to {OUTPUT_FILE}")
+    
