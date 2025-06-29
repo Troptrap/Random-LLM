@@ -2,7 +2,7 @@
 
 Tired of being loyal to a single LLM? Do you dream of a world where your text generation is as unpredictable as a cat chasing a laser pointer? Then you've come to the right place!
 
-**Random-LLM (AB)Use free AI** is your one-stop-shop for AI model roulette. We've crammed a bunch of free AI models into a Python package and made it choose one at random every time you ask it to generate text. Because why settle for consistency when you can have *surprise*?
+**Random-LLM (AB)Use free AI** is your one-stop-shop for AI model roulette. We've crammed a bunch of free AI models into a Python package and made it choose one at random every time you ask it to generate text. Because why settle for consistency when you can have surprise?
 
 ## Features
 
@@ -17,7 +17,7 @@ Tired of being loyal to a single LLM? Do you dream of a world where your text ge
 ```bash
 git clone https://github.com/Troptrap/Random-LLM.git
 cd Random-LLM
-pip install python-dotenv
+pip install -r requirements.txt
 # Set your API keys in .env file (see "Configuration" below)
 python -m pip install -e .
 ```
@@ -52,6 +52,7 @@ print(response.text)
 ```
 ## Known behavior 
 There is no message history, no context. If you want to send context, add it to prompt.
+
 ## Why?
 
 Because life's too short to use the same LLM every day. Embrace the randomness! Live a little! Confuse your users!
